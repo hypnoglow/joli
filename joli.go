@@ -14,7 +14,6 @@
 //  queue := make(chan joli.Job, QueueMaxSize)
 //
 //  p := joli.NewProcessor(queue, errorHandler, WorkerPoolSize)
-//  p.Start()
 //
 //  // Create some jobs; then send it directly to the queue.
 //  // This code will not block until the queue is not full.
@@ -43,14 +42,19 @@ type Processor struct {
 	stop            chan empty
 }
 
-// NewProcessor returns a new Processor.
+// NewProcessor creates a new Processor,
+// starst listening for job requests
+// and returns a Processor handle.
 func NewProcessor(queue <-chan Job, errorHandler JobErrorHandler, maxLimiterSize int64) *Processor {
-	return &Processor{
+	p := &Processor{
 		jobQueue:        queue,
 		jobErrorHandler: errorHandler,
 		limiter:         make(chan empty, maxLimiterSize),
 		stop:            make(chan empty),
 	}
+
+	go p.start()
+	return p
 }
 
 // NumWorkers returns a number of workers currently
@@ -59,30 +63,28 @@ func (w Processor) NumWorkers() int64 {
 	return int64(len(w.limiter))
 }
 
-// Start signals the processor to start listening for job requests.
-func (w *Processor) Start() {
-	go func() {
-		for {
-			select {
-			case job, ok := <-w.jobQueue:
-				if !ok {
-					return
-				}
-
-				w.limiter <- empty{}
-
-				// Spawn a worker goroutine.
-				go func() {
-					if err := job.Run(); err != nil {
-						w.jobErrorHandler(err)
-					}
-					<-w.limiter
-				}()
-			case <-w.stop:
+// start signals the processor to start listening for job requests.
+func (w *Processor) start() {
+	for {
+		select {
+		case job, ok := <-w.jobQueue:
+			if !ok {
 				return
 			}
+
+			w.limiter <- empty{}
+
+			// Spawn a worker goroutine.
+			go func() {
+				if err := job.Run(); err != nil {
+					w.jobErrorHandler(err)
+				}
+				<-w.limiter
+			}()
+		case <-w.stop:
+			return
 		}
-	}()
+	}
 }
 
 // Stop signals the processor to stop listening for job requests.

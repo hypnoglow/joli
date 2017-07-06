@@ -13,7 +13,7 @@ import (
 
 const (
 	defaultJobChanSize       = 1024
-	defaultProcessorPoolSize = 1024
+	defaultProcessorPoolSize = 4
 	numberOfJobs             = 4096
 
 	processorMonitoringPeriod = time.Millisecond * 500
@@ -32,7 +32,6 @@ func main() {
 	jobChan := make(chan joli.Job, defaultJobChanSize)
 
 	p := joli.NewProcessor(jobChan, errorHandler, defaultProcessorPoolSize)
-	p.Start()
 
 	// Monitoring number of jobs waiting for an available worker.
 	go func() {
