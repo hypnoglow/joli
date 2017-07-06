@@ -1,5 +1,7 @@
 # joli
 
+[![GoDoc](https://godoc.org/github.com/hypnoglow/joli?status.svg)](https://godoc.org/github.com/hypnoglow/joli)
+
 A simple job processor library.
 
 It just provides an easy way to define an N-sized queue and 
