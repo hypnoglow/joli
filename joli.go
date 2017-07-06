@@ -83,7 +83,5 @@ func (w *Processor) Start() {
 
 // Stop signals the processor to stop listening for job requests.
 func (w *Processor) Stop() {
-	go func() {
-		w.stop <- empty{}
-	}()
+	close(w.stop)
 }
