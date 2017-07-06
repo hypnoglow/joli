@@ -64,7 +64,11 @@ func (w *Processor) Start() {
 	go func() {
 		for {
 			select {
-			case job := <-w.jobQueue:
+			case job, ok := <-w.jobQueue:
+				if !ok {
+					return
+				}
+
 				w.limiter <- empty{}
 
 				// Spawn a worker goroutine.
