@@ -91,3 +91,5 @@ func (w *Processor) start() {
 func (w *Processor) Stop() {
 	close(w.stop)
 }
+
+// Crowdbotics
